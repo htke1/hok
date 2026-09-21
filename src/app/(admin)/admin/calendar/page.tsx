@@ -309,12 +309,12 @@ export default function CalendarPage() {
         </div>
 
         {/* Room Switcher */}
-        <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-[#E0C097]/60">
-          <label className="text-xs font-semibold text-[#4A5568] uppercase pl-2">Room:</label>
+        <div className="flex items-center gap-2 bg-white p-2.5 rounded-2xl shadow-xs border border-[#E0C097]/60 w-full md:w-auto">
+          <label className="text-xs font-semibold text-[#4A5568] uppercase pl-1 shrink-0">Room:</label>
           <select
             value={selectedRoomId}
             onChange={(e) => setSelectedRoomId(e.target.value)}
-            className="border-none font-medium text-sm text-[#2D3748] outline-none bg-transparent cursor-pointer pr-4"
+            className="border-none font-medium text-xs sm:text-sm text-[#2D3748] outline-none bg-transparent cursor-pointer flex-1 pr-2 truncate"
           >
             {loading && rooms.length === 0 ? (
               <option>Loading rooms...</option>
@@ -390,7 +390,7 @@ export default function CalendarPage() {
             </div>
 
             {/* Weekday Headers */}
-            <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-[#9B8B7E] mb-2 uppercase tracking-wider">
+            <div className="grid grid-cols-7 gap-1 text-center text-[10px] sm:text-xs font-semibold text-[#9B8B7E] mb-2 uppercase tracking-wider">
               <span>Sun</span>
               <span>Mon</span>
               <span>Tue</span>
@@ -401,10 +401,10 @@ export default function CalendarPage() {
             </div>
 
             {/* Month Day Grid */}
-            <div className="grid grid-cols-7 gap-1.5">
+            <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
               {/* Empty placeholder days for first week alignment */}
               {Array.from({ length: firstDayIndex }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-20 rounded-xl bg-gray-50/50 border border-transparent"></div>
+                <div key={`empty-${i}`} className="h-12 sm:h-20 rounded-lg sm:rounded-xl bg-gray-50/50 border border-transparent"></div>
               ))}
 
               {/* Real Days of the month */}
@@ -415,36 +415,45 @@ export default function CalendarPage() {
 
                 let bgClass = 'bg-[#FAF6F1]/50 border-gray-100 hover:border-[#E0C097]';
                 let tagClass = 'text-emerald-700 bg-emerald-50';
+                let dotClass = 'bg-emerald-400';
 
                 if (status.type === 'BOOKED') {
                   bgClass = 'bg-[#B85C38]/10 border-[#B85C38]/40';
                   tagClass = 'bg-[#B85C38] text-white';
+                  dotClass = 'bg-[#B85C38]';
                 } else if (status.type === 'OTA') {
                   bgClass = 'bg-[#4A5568]/10 border-[#4A5568]/40';
                   tagClass = 'bg-[#4A5568] text-white';
+                  dotClass = 'bg-[#4A5568]';
                 } else if (status.type === 'MANUAL') {
                   bgClass = 'bg-[#9B8B7E]/15 border-[#9B8B7E]/40';
                   tagClass = 'bg-[#9B8B7E] text-white';
+                  dotClass = 'bg-[#9B8B7E]';
                 }
 
                 return (
                   <div
                     key={`day-${dayNum}`}
-                    className={`h-20 rounded-xl border p-1.5 flex flex-col justify-between transition-all ${bgClass} ${
+                    className={`h-12 sm:h-20 rounded-lg sm:rounded-xl border p-1 sm:p-1.5 flex flex-col justify-between transition-all ${bgClass} ${
                       isToday ? 'ring-2 ring-[#B85C38] ring-offset-1' : ''
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={`text-xs font-bold ${isToday ? 'text-[#B85C38]' : 'text-[#2D3748]'}`}>
+                      <span className={`text-[11px] sm:text-xs font-bold ${isToday ? 'text-[#B85C38]' : 'text-[#2D3748]'}`}>
                         {dayNum}
                       </span>
                       {isToday && (
-                        <span className="text-[9px] uppercase font-bold text-[#B85C38] tracking-wider">Today</span>
+                        <span className="hidden sm:inline text-[9px] uppercase font-bold text-[#B85C38] tracking-wider">Today</span>
                       )}
                     </div>
 
                     <div className="overflow-hidden">
-                      <span className={`text-[10px] block truncate font-medium rounded px-1 py-0.5 text-center ${tagClass}`} title={status.label}>
+                      {/* Mobile Indicator Dot */}
+                      <div className="block sm:hidden text-center">
+                        <span className={`inline-block w-2 h-2 rounded-full ${dotClass}`} title={status.label}></span>
+                      </div>
+                      {/* Desktop Full Tag */}
+                      <span className={`hidden sm:block text-[10px] truncate font-medium rounded px-1 py-0.5 text-center ${tagClass}`} title={status.label}>
                         {status.label}
                       </span>
                     </div>
