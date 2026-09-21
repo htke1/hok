@@ -2,36 +2,50 @@ import { db } from '@/lib/db';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { CalendarCheck, DollarSign, Clock, Users } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AdminDashboardPage() {
   const today = new Date();
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-  // Fetch stats
-  const totalBookings = await db.booking.count({
-    where: { createdAt: { gte: startOfMonth, lte: endOfMonth } }
-  });
+  let totalBookings = 0;
+  let confirmedBookings = 0;
+  let pendingBookings = 0;
+  let revenue = 0;
+  let recentBookings: any[] = [];
 
-  const confirmedBookings = await db.booking.count({
-    where: { status: 'CONFIRMED', createdAt: { gte: startOfMonth, lte: endOfMonth } }
-  });
+  try {
+    const [total, confirmed, pending, revResult, recent] = await Promise.all([
+      db.booking.count({
+        where: { createdAt: { gte: startOfMonth, lte: endOfMonth } }
+      }),
+      db.booking.count({
+        where: { status: 'CONFIRMED', createdAt: { gte: startOfMonth, lte: endOfMonth } }
+      }),
+      db.booking.count({
+        where: { status: 'PENDING' }
+      }),
+      db.booking.aggregate({
+        _sum: { totalAmount: true },
+        where: { status: 'CONFIRMED', createdAt: { gte: startOfMonth, lte: endOfMonth } }
+      }),
+      db.booking.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: { room: true }
+      }),
+    ]);
 
-  const pendingBookings = await db.booking.count({
-    where: { status: 'PENDING' }
-  });
-
-  const revenueResult = await db.booking.aggregate({
-    _sum: { totalAmount: true },
-    where: { status: 'CONFIRMED', createdAt: { gte: startOfMonth, lte: endOfMonth } }
-  });
-  const revenue = revenueResult._sum.totalAmount || 0;
-
-  // Fetch recent bookings
-  const recentBookings = await db.booking.findMany({
-    take: 10,
-    orderBy: { createdAt: 'desc' },
-    include: { room: true }
-  });
+    totalBookings = total;
+    confirmedBookings = confirmed;
+    pendingBookings = pending;
+    revenue = revResult._sum.totalAmount || 0;
+    recentBookings = recent;
+  } catch (error) {
+    console.warn('Dashboard DB query fallback (tables might be syncing):', error);
+  }
 
   return (
     <div className="space-y-8">
