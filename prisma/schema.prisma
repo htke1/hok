@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Room {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  type          String         // DORM or PRIVATE
+  description   String
+  pricePerNight Int            // in INR
+  capacity      Int
+  amenities     String         // JSON string array
+  images        String         // JSON string array of image paths
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  bookings      Booking[]
+  blockedDates  BlockedDate[]
+  icalFeeds     ICalFeed[]
+}
+
+model Booking {
+  id                String   @id @default(cuid())
+  roomId            String
+  room              Room     @relation(fields: [roomId], references: [id])
+  guestName         String
+  guestEmail        String
+  guestPhone        String
+  nationality       String   @default("Indian")
+  govtIdType        String?  // AADHAAR, PASSPORT, etc.
+  govtIdNumber      String?
+  checkIn           DateTime
+  checkOut          DateTime
+  numberOfGuests    Int      @default(1)
+  totalAmount       Int      // in INR
+  taxAmount         Int      @default(0)
+  status            String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  paymentMethod     String?  // RAZORPAY, UPI, PAY_AT_PROPERTY
+  razorpayOrderId   String?  @unique
+  razorpayPaymentId String?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model BlockedDate {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  startDate DateTime
+  endDate   DateTime
+  source    String   @default("MANUAL") // MANUAL, OTA_SYNC
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model ICalFeed {
+  id          String   @id @default(cuid())
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id])
+  externalUrl String
+  lastSynced  DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
