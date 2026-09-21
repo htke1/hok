@@ -6,7 +6,7 @@ import { useState } from 'react';
 export default function WhatsAppFAB() {
   const [isHovered, setIsHovered] = useState(false);
   
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '919876543210';
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '916006619569';
   const text = encodeURIComponent("Hi! I'd like to know about rooms at House Of Karma, Leh.");
   const url = `https://wa.me/${whatsappNumber}?text=${text}`;
 

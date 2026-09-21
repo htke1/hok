@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, BookOpen, CalendarDays, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import Image from 'next/image';
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -23,9 +25,25 @@ export default function Sidebar() {
 
   return (
     <div className="w-64 bg-[#2D3748] text-white flex flex-col hidden md:flex">
-      <div className="p-6">
-        <Link href="/admin/dashboard" className="text-xl font-heading font-bold text-[#E0C097]">
-          House Of Karma
+      <div className="p-6 border-b border-white/10">
+        <Link href="/admin/dashboard" className="flex items-center gap-3">
+          <div className="w-10 h-7 relative flex items-center justify-center shrink-0">
+            <Image
+              src="/logo-emblem-white.png"
+              alt="House Of Karma Logo"
+              width={40}
+              height={28}
+              className="w-auto h-7 object-contain"
+            />
+          </div>
+          <div>
+            <span className="text-base font-heading font-bold text-white tracking-wide block leading-tight">
+              House Of Karma
+            </span>
+            <span className="text-[10px] uppercase tracking-widest text-[#E0C097] font-semibold block">
+              Admin Portal
+            </span>
+          </div>
         </Link>
       </div>
       

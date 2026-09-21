@@ -17,6 +17,14 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "House Of Karma | Backpacker Hostel in Leh, Ladakh",
   description: "A community-focused backpacker hostel in Leh, Ladakh offering comfortable stays, amazing views, and unforgettable experiences.",
+  icons: {
+    icon: [
+      { url: "/icon.png", sizes: "192x192", type: "image/png" },
+      { url: "/logo-emblem.png", type: "image/png" }
+    ],
+    apple: "/icon.png",
+    shortcut: "/icon.png"
+  }
 };
 
 export default function RootLayout({

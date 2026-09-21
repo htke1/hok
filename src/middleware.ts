@@ -31,8 +31,11 @@ export async function middleware(request: NextRequest) {
 
   try {
     await jwtVerify(adminToken, getJwtSecretKey());
+    if (pathname === '/admin' || pathname === '/admin/') {
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+    }
     return NextResponse.next();
-  } catch (error) {
+  } catch {
     const response = NextResponse.redirect(new URL('/admin/login', request.url));
     response.cookies.delete('admin_token');
     return response;

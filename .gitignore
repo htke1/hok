@@ -38,3 +38,6 @@ next-env.d.ts
 # database
 prisma/*.db
 prisma/*.db-journal
+
+# raw assets
+Assets/

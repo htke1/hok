@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Phone, Mail, Globe, Hash } from 'lucide-react';
+import { MapPin, Phone, Mail, Globe, Hash, MessageCircle } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -11,8 +11,23 @@ export default function Footer() {
           {/* Column 1: Brand */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <Image src="/logo.png" alt="HOK Logo" width={40} height={40} className="h-10 w-auto grayscale brightness-200" />
-              <span className="font-heading text-xl font-bold text-white tracking-wider">HOUSE OF KARMA</span>
+              <div className="relative w-12 h-8 flex items-center justify-center">
+                <Image
+                  src="/logo-emblem-white.png"
+                  alt="House Of Karma Logo"
+                  width={56}
+                  height={36}
+                  className="w-auto h-8 object-contain"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-heading text-xl font-bold text-white tracking-wider leading-tight">
+                  HOUSE OF KARMA
+                </span>
+                <span className="text-[10px] tracking-widest uppercase text-[#E0C097] font-medium">
+                  Leh &middot; Ladakh
+                </span>
+              </div>
             </div>
             <p className="font-heading text-sandstone text-lg italic">
               Your mountain home in Leh, Ladakh
@@ -50,7 +65,18 @@ export default function Footer() {
               </li>
               <li className="flex items-center space-x-3 text-sm">
                 <Phone size={18} className="text-terracotta shrink-0" />
-                <span>+91 9876543210</span>
+                <a href="tel:+916006619569" className="hover:text-terracotta transition-colors">+91 60066 19569</a>
+              </li>
+              <li className="flex items-center space-x-3 text-sm">
+                <MessageCircle size={18} className="text-terracotta shrink-0" />
+                <a 
+                  href="https://wa.me/916006619569?text=Hi!%20I%20have%20an%20inquiry%20regarding%20House%20Of%20Karma." 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-terracotta transition-colors"
+                >
+                  WhatsApp: +91 60066 19569
+                </a>
               </li>
               <li className="flex items-center space-x-3 text-sm">
                 <Mail size={18} className="text-terracotta shrink-0" />

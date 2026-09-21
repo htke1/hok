@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+import Image from 'next/image';
+
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -40,11 +42,24 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-[#FAF6F1] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-4">
-            <span className="text-2xl font-bold font-heading text-[#B85C38]">House Of Karma</span>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <Link href="/" className="inline-block mb-3 group">
+            <div className="w-24 h-16 relative mx-auto mb-1 transition-transform group-hover:scale-105">
+              <Image
+                src="/logo-emblem.png"
+                alt="House Of Karma Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <span className="text-xl font-bold font-heading text-[#1E2732] block">
+              HOUSE OF KARMA
+            </span>
+            <span className="text-xs tracking-widest uppercase text-[#B85C38] font-semibold">
+              Leh &middot; Ladakh
+            </span>
           </Link>
-          <h1 className="text-3xl font-heading font-semibold text-[#2D3748]">Admin Dashboard</h1>
+          <h1 className="text-2xl font-heading font-bold text-[#2D3748] mt-2">Admin Portal</h1>
         </div>
 
         {error && (

@@ -60,9 +60,12 @@ export async function generateICalFeed(roomSlug: string) {
  * Parse an external iCal feed and return blocked date ranges
  */
 export async function parseExternalICalFeed(icalUrl: string) {
-  // Dynamic import for node-ical (CommonJS module)
+  // Dynamic import for node-ical (CommonJS/ESM interop)
   const nodeIcal = await import('node-ical');
-  const events = await nodeIcal.async.fromURL(icalUrl);
+  const parser = (nodeIcal as any).default?.async || (nodeIcal as any).async || (nodeIcal as any).default || nodeIcal;
+  const events = typeof parser.fromURL === 'function' 
+    ? await parser.fromURL(icalUrl) 
+    : await (nodeIcal as any).fromURL(icalUrl);
 
   const blockedRanges: Array<{
     start: Date;

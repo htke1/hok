@@ -23,13 +23,13 @@ async function main() {
         'Shared bathroom',
         'Fresh linens'
       ]),
-      images: JSON.stringify(['/images/rooms/dorm-mixed-1.webp'])
+      images: JSON.stringify(['/images/rooms/dorm-pod-mixed.jpg', '/images/rooms/dorm-pod-female.jpg'])
     },
     {
       name: 'Dorm Pod - Female Only',
       slug: 'dorm-pod-female',
       type: 'DORM',
-      description: 'Safe and secure female-only dorm pod.',
+      description: 'Safe and secure female-only dorm pod with carpeted floor and ensuite bathroom.',
       pricePerNight: 699,
       capacity: 6,
       amenities: JSON.stringify([
@@ -37,34 +37,35 @@ async function main() {
         'Reading light',
         'Universal plug',
         'Personal lockbox',
-        'Shared bathroom',
+        'Ensuite bathroom',
         'Fresh linens',
         'Female-only floor'
       ]),
-      images: JSON.stringify(['/images/rooms/dorm-female-1.webp'])
+      images: JSON.stringify(['/images/rooms/dorm-pod-female.jpg', '/images/rooms/dorm-pod-mixed.jpg'])
     },
     {
       name: 'Private Himalayan Room - Standard',
       slug: 'private-standard',
       type: 'PRIVATE',
-      description: 'Cozy private room with a beautiful mountain view.',
+      description: 'Cozy private room with authentic Ladakhi willow stalk talu ceiling, warm duvet, and mountain view.',
       pricePerNight: 2499,
       capacity: 2,
       amenities: JSON.stringify([
         'Ensuite bathroom',
+        'Willow ceiling',
         'Mountain view',
         'Work desk',
         'Room heater',
         'Hot shower',
         'Tea maker'
       ]),
-      images: JSON.stringify(['/images/rooms/private-std-1.webp'])
+      images: JSON.stringify(['/images/rooms/private-standard.jpg', '/images/rooms/bathroom-ensuite.jpg', '/images/rooms/private-solo.jpg'])
     },
     {
       name: 'Private Himalayan Room - Deluxe',
       slug: 'private-deluxe',
       type: 'PRIVATE',
-      description: 'Luxurious private room with balcony and premium features.',
+      description: 'Luxurious private room with direct access to open scenic veranda balcony overlooking the valley.',
       pricePerNight: 3499,
       capacity: 2,
       amenities: JSON.stringify([
@@ -78,7 +79,7 @@ async function main() {
         'Premium bedding',
         'Valley view'
       ]),
-      images: JSON.stringify(['/images/rooms/private-dlx-1.webp'])
+      images: JSON.stringify(['/images/rooms/private-deluxe.jpg', '/images/rooms/private-standard.jpg', '/images/rooms/bathroom-ensuite.jpg'])
     }
   ]
 

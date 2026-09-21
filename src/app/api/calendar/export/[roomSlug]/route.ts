@@ -6,7 +6,8 @@ export async function GET(
   { params }: { params: Promise<{ roomSlug: string }> }
 ) {
   try {
-    const { roomSlug } = await params;
+    const { roomSlug: rawSlug } = await params;
+    const roomSlug = rawSlug?.replace(/\.ics$/i, '');
     
     if (!roomSlug) {
       return new NextResponse('Room slug is required', { status: 400 });
