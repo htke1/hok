@@ -252,3 +252,55 @@ Instead of generic, boring spinning wheels, any page buffering or data loading d
 * [x] **High-Altitude Essentials:** Ladakh trust badges (Hot water, Starlink Wi-Fi, Heating, Oxygen) and Acclimatization guide prominently displayed.
 * [x] **Production Build Verified:** All routes, static pages, and server components compile with zero errors.
 
+---
+
+## 9. Vercel Deployment Guide
+
+Deploying House Of Karma to **Vercel** connects your GitHub repository (`htke1/hok`) directly to Vercel for automated CI/CD builds on every commit.
+
+### Step 1: Database Setup (Cloud Postgres)
+Because Vercel Serverless Functions have an ephemeral, read-only filesystem, SQLite local files cannot be written to in production. Use a free cloud PostgreSQL database:
+* **Option A (Recommended — 1-Click via Vercel):**
+  1. In your Vercel Dashboard, click **Storage** ➜ **Create Database** ➜ **Postgres** (powered by Neon).
+  2. Select your region (e.g. `ap-south-1` Mumbai or `ap-southeast-1` Singapore).
+  3. Click **Connect to Project**. Vercel will automatically configure `DATABASE_URL`!
+* **Option B (Direct Neon or Supabase):**
+  1. Sign up for free at [neon.tech](https://neon.tech) or [supabase.com](https://supabase.com).
+  2. Create a new project: `house-of-karma`.
+  3. Copy the **Connection String** (e.g. `postgresql://neondb_owner:...@ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require`).
+
+> In `prisma/schema.prisma`, change `provider = "sqlite"` to `provider = "postgresql"`.
+
+### Step 2: Import Repository in Vercel
+1. Go to [vercel.com](https://vercel.com) and log in with your GitHub account.
+2. Click **"Add New..."** ➜ **"Project"**.
+3. Under *Import Git Repository*, locate **`htke1/hok`** and click **Import**.
+4. Framework Preset: **Next.js** (detected automatically).
+5. Root Directory: `./` (leave default).
+
+### Step 3: Add Environment Variables
+In the **Environment Variables** accordion, add the following keys:
+
+| Key | Example Value | Description |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | `postgresql://...` | Your Neon, Supabase, or Vercel Postgres connection string. |
+| `NEXT_PUBLIC_SITE_URL` | `https://your-domain.vercel.app` | Production domain (or custom domain `https://houseofkarma.in`). |
+| `ADMIN_JWT_SECRET` | `hok_super_secret_jwt_leh_2026` | Random secure string for admin session encryption. |
+| `ADMIN_USERNAME` | `admin` | Username to log in to `/admin`. |
+| `ADMIN_PASSWORD` | `YourSecretPassword123` | Password to log in to `/admin`. |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `916006619569` | International format without spaces or plus. |
+| `NEXT_PUBLIC_CONTACT_NUMBER` | `+91 60066 19569` | Display contact format. |
+| `NEXT_PUBLIC_HOSTEL_NAME` | `House Of Karma` | Brand name. |
+| `RAZORPAY_KEY_ID` | `rzp_live_...` or `rzp_test_...` | Razorpay Key ID. |
+| `RAZORPAY_KEY_SECRET` | `your_razorpay_secret` | Razorpay Key Secret. |
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | `rzp_live_...` or `rzp_test_...` | Client-side Razorpay Key ID. |
+
+### Step 4: Click Deploy!
+1. Click **Deploy**. Vercel will build and deploy the project in ~1 minute.
+2. Run database migration and seed once:
+   ```bash
+   npx prisma db push
+   npx tsx prisma/seed.ts
+   ```
+3. Your platform will be live globally with high-speed edge CDN caching!
+
