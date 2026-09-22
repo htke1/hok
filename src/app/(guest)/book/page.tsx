@@ -18,7 +18,6 @@ function BookPageContent() {
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
   const [availabilityData, setAvailabilityData] = useState<any>(null);
   const [guestData, setGuestData] = useState<any>(null);
-  const [bookingId, setBookingId] = useState<string | null>(null);
   const [rooms, setRooms] = useState<any[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [checking, setChecking] = useState(false);
@@ -77,31 +76,9 @@ function BookPageContent() {
     }
   };
 
-  const handleGuestSubmit = async (data: any) => {
+  const handleGuestSubmit = (data: any) => {
     setGuestData(data);
-    try {
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          roomSlug: selectedRoom.slug,
-          checkIn: range?.from?.toISOString(),
-          checkOut: range?.to?.toISOString(),
-          numberOfGuests: 1,
-          paymentMethod: 'ONLINE',
-        }),
-      });
-      const resData = await res.json();
-      if (res.ok) {
-        setBookingId(resData.id);
-        setStep(3);
-      } else {
-        alert(resData.error || 'Failed to create booking');
-      }
-    } catch (e) {
-      alert('Error creating booking. Please contact us.');
-    }
+    setStep(3);
   };
 
   if (loadingRooms) {
@@ -278,20 +255,26 @@ function BookPageContent() {
           {step === 3 && (
             <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-sandstone">
               <h2 className="text-2xl font-heading text-timber font-bold mb-3">
-                3. Payment & Confirmation
+                3. Secure Online Payment
               </h2>
               <p className="text-slate text-sm mb-6">
-                Choose online payment with instant Razorpay receipt, or reserve with Pay-at-Property / Advance UPI deposit.
+                Complete your payment with Razorpay to instantly confirm your stay. All major UPI apps, cards, and netbanking are accepted.
               </p>
 
-              {bookingId && availabilityData && guestData && (
+              {availabilityData && guestData && selectedRoom && range?.from && range?.to && (
                 <div className="max-w-md">
                   <CheckoutButton
-                    bookingId={bookingId}
-                    amount={availabilityData.totalPrice}
+                    roomSlug={selectedRoom.slug}
+                    checkIn={range.from.toISOString()}
+                    checkOut={range.to.toISOString()}
+                    numberOfGuests={1}
+                    totalAmount={availabilityData.totalPrice}
                     guestName={guestData.guestName}
                     guestEmail={guestData.guestEmail}
                     guestPhone={guestData.guestPhone}
+                    nationality={guestData.nationality}
+                    govtIdType={guestData.govtIdType}
+                    govtIdNumber={guestData.govtIdNumber}
                   />
                 </div>
               )}

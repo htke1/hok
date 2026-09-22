@@ -1,44 +1,85 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { razorpay } from '@/lib/razorpay';
+import { calculateNights, calculateTax } from '@/lib/utils';
 
 export async function POST(request: Request) {
   try {
-    const { bookingId } = await request.json();
+    const { roomSlug, checkIn, checkOut, numberOfGuests } = await request.json();
 
-    if (!bookingId) {
-      return NextResponse.json({ error: 'Booking ID is required' }, { status: 400 });
+    if (!roomSlug || !checkIn || !checkOut) {
+      return NextResponse.json({ error: 'Room and dates are required' }, { status: 400 });
     }
 
-    const booking = await db.booking.findUnique({
-      where: { id: bookingId }
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+
+    if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime()) || checkInDate >= checkOutDate) {
+      return NextResponse.json({ error: 'Invalid dates selected' }, { status: 400 });
+    }
+
+    const room = await db.room.findUnique({
+      where: { slug: roomSlug }
     });
 
-    if (!booking || booking.status !== 'PENDING') {
-      return NextResponse.json({ error: 'Invalid booking or already processed' }, { status: 400 });
+    if (!room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
 
-    const amountInPaisa = Math.round((booking.totalAmount) * 100);
+    // Availability check against confirmed bookings only
+    const overlappingBooking = await db.booking.findFirst({
+      where: {
+        roomId: room.id,
+        status: 'CONFIRMED',
+        AND: [
+          { checkIn: { lt: checkOutDate } },
+          { checkOut: { gt: checkInDate } }
+        ]
+      }
+    });
+
+    if (overlappingBooking) {
+      return NextResponse.json({ error: 'Room is no longer available for these dates' }, { status: 409 });
+    }
+
+    // Check blocked dates (manual or OTA sync)
+    const overlappingBlock = await db.blockedDate.findFirst({
+      where: {
+        roomId: room.id,
+        AND: [
+          { startDate: { lt: checkOutDate } },
+          { endDate: { gt: checkInDate } }
+        ]
+      }
+    });
+
+    if (overlappingBlock) {
+      return NextResponse.json({ error: 'Selected dates are blocked on this room' }, { status: 409 });
+    }
+
+    const nights = calculateNights(checkInDate, checkOutDate);
+    const basePrice = room.pricePerNight * nights;
+    const taxAmount = calculateTax(basePrice);
+    const totalAmount = basePrice + taxAmount;
+    const amountInPaisa = Math.round(totalAmount * 100);
 
     const order = await razorpay.orders.create({
       amount: amountInPaisa,
       currency: 'INR',
-      receipt: `receipt_${booking.id}`
-    });
-
-    await db.booking.update({
-      where: { id: booking.id },
-      data: { razorpayOrderId: order.id }
+      receipt: `rcpt_${Date.now().toString().slice(-8)}`
     });
 
     return NextResponse.json({
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      totalAmount,
+      taxAmount,
+      nights
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create order error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

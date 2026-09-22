@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     const overlappingBookings = await db.booking.findFirst({
       where: {
         roomId: room.id,
-        status: { in: ['CONFIRMED', 'PENDING'] },
+        status: 'CONFIRMED',
         AND: [
           { checkIn: { lt: checkOut } },
           { checkOut: { gt: checkIn } }

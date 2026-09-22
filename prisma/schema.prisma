@@ -39,8 +39,8 @@ model Booking {
   numberOfGuests    Int      @default(1)
   totalAmount       Int      // in INR
   taxAmount         Int      @default(0)
-  status            String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
-  paymentMethod     String?  // RAZORPAY, UPI, PAY_AT_PROPERTY
+  status            String   @default("CONFIRMED") // CONFIRMED, CANCELLED
+  paymentMethod     String?  // ONLINE (Razorpay UPI, Cards, Netbanking)
   razorpayOrderId   String?  @unique
   razorpayPaymentId String?
   notes             String?

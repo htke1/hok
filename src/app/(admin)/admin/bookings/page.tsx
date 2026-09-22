@@ -100,8 +100,7 @@ export default function BookingsPage() {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="flex-1 sm:flex-none border border-[#E0C097] rounded-xl px-3 py-2 text-xs sm:text-sm outline-none focus:border-[#B85C38] bg-white cursor-pointer"
           >
-            <option value="ALL">All Statuses</option>
-            <option value="PENDING">Pending</option>
+            <option value="ALL">All Bookings</option>
             <option value="CONFIRMED">Confirmed</option>
             <option value="CANCELLED">Cancelled</option>
           </select>
@@ -228,13 +227,12 @@ export default function BookingsPage() {
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     CONFIRMED: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-    PENDING: 'bg-amber-50 text-amber-800 border-amber-200',
     CANCELLED: 'bg-red-50 text-red-800 border-red-200',
   };
   
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${styles[status] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
-      {status}
+    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${styles[status] || 'bg-emerald-50 text-emerald-800 border-emerald-200'}`}>
+      {status === 'CONFIRMED' ? 'Confirmed' : status}
     </span>
   );
 }

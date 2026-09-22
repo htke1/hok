@@ -13,26 +13,27 @@ export default async function AdminDashboardPage() {
 
   let totalBookings = 0;
   let confirmedBookings = 0;
-  let pendingBookings = 0;
+  let upcomingCheckIns = 0;
   let revenue = 0;
   let recentBookings: any[] = [];
 
   try {
-    const [total, confirmed, pending, revResult, recent] = await Promise.all([
-      db.booking.count({
-        where: { createdAt: { gte: startOfMonth, lte: endOfMonth } }
-      }),
+    const [total, confirmed, upcoming, revResult, recent] = await Promise.all([
       db.booking.count({
         where: { status: 'CONFIRMED', createdAt: { gte: startOfMonth, lte: endOfMonth } }
       }),
       db.booking.count({
-        where: { status: 'PENDING' }
+        where: { status: 'CONFIRMED' }
+      }),
+      db.booking.count({
+        where: { status: 'CONFIRMED', checkIn: { gte: today } }
       }),
       db.booking.aggregate({
         _sum: { totalAmount: true },
         where: { status: 'CONFIRMED', createdAt: { gte: startOfMonth, lte: endOfMonth } }
       }),
       db.booking.findMany({
+        where: { status: 'CONFIRMED' },
         take: 10,
         orderBy: { createdAt: 'desc' },
         include: { room: true }
@@ -41,7 +42,7 @@ export default async function AdminDashboardPage() {
 
     totalBookings = total;
     confirmedBookings = confirmed;
-    pendingBookings = pending;
+    upcomingCheckIns = upcoming;
     revenue = revResult._sum.totalAmount || 0;
     recentBookings = recent;
   } catch (error) {
@@ -68,23 +69,23 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <StatCard
           icon={<CalendarCheck size={18} className="sm:w-5 sm:h-5 text-[#B85C38]" />}
-          label="Total (Month)"
+          label="Bookings (Month)"
           value={totalBookings}
         />
         <StatCard
           icon={<Users size={18} className="sm:w-5 sm:h-5 text-emerald-600" />}
-          label="Confirmed"
+          label="All Confirmed"
           value={confirmedBookings}
         />
         <StatCard
           icon={<DollarSign size={18} className="sm:w-5 sm:h-5 text-[#B85C38]" />}
-          label="Revenue"
+          label="Revenue (Month)"
           value={formatPrice(revenue)}
         />
         <StatCard
-          icon={<Clock size={18} className="sm:w-5 sm:h-5 text-amber-600" />}
-          label="Pending"
-          value={pendingBookings}
+          icon={<Clock size={18} className="sm:w-5 sm:h-5 text-blue-600" />}
+          label="Upcoming Stays"
+          value={upcomingCheckIns}
         />
       </div>
 
@@ -203,13 +204,12 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     CONFIRMED: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-    PENDING: 'bg-amber-50 text-amber-800 border-amber-200',
     CANCELLED: 'bg-red-50 text-red-800 border-red-200',
   };
   
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${styles[status] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
-      {status}
+    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${styles[status] || 'bg-emerald-50 text-emerald-800 border-emerald-200'}`}>
+      {status === 'CONFIRMED' ? 'Confirmed' : status}
     </span>
   );
 }

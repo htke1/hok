@@ -70,23 +70,22 @@ Before payment, a clear summary is displayed in the sidebar:
 
 ---
 
-### Step 5: Secure Payment Options
-Guests can choose between two flexible payment methods:
+### Step 5: 100% Online Payment & Instant Confirmation (No Unpaid / Pending Bookings)
+To prevent ghost bookings, fake reservations, and abandoned calendar locks, House Of Karma operates strictly on **Online Advance Payment**:
 
-#### Option A: Pay Online (Instant Confirmation via Razorpay)
-1. Guest clicks **"Pay Online"**.
-2. The server creates a cryptographically secured Razorpay order (`/api/payment/create-order`).
-3. Razorpay’s checkout opens directly on screen, accepting:
-   * **UPI:** Google Pay, PhonePe, Paytm, BHIM.
-   * **Cards:** Credit/Debit (Visa, Mastercard, RuPay, Amex).
+1. **Zero Database Clutter (No Pending State):**
+   * If a guest closes their browser, changes their mind, or fails payment, **no booking record is created in the database**.
+   * Only after the payment is successfully completed and verified by Razorpay is the booking saved to the database.
+2. **Guaranteed Status:**
+   * Every booking saved in the system is automatically marked as **CONFIRMED**.
+   * There are no "Pending" statuses.
+3. **Supported Payment Modes (via Razorpay Gateway):**
+   * **UPI:** Google Pay, PhonePe, Paytm, BHIM, Cred.
+   * **Cards:** Credit/Debit cards (Visa, Mastercard, RuPay, Amex).
    * **Netbanking & Wallets**.
-4. Upon successful payment, Razorpay sends back a signature (`razorpay_signature`).
-5. The backend verifies the HMAC SHA256 cryptographic signature (`/api/payment/verify`) and immediately updates the booking status to **CONFIRMED**.
-
-#### Option B: Pay at Property / Advance UPI Deposit
-1. Designed for backpackers who prefer paying on arrival or making an advance UPI deposit via WhatsApp.
-2. Clicking **"Pay at Property"** confirms the booking in the system and redirects to the confirmation page.
-3. The guest receives a one-tap button to message the desk on WhatsApp with their booking reference code.
+4. **Instant Verification:**
+   * Razorpay generates a secure cryptographic signature (`razorpay_signature`).
+   * The backend verifies the HMAC SHA256 signature (`/api/payment/verify`) before saving the confirmed record, immediately reserving the bed and blocking those dates across Booking.com via iCal.
 
 ---
 

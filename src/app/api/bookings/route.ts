@@ -22,11 +22,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
 
-    // Availability check
+    // Availability check against confirmed bookings
     const overlapping = await db.booking.findFirst({
       where: {
         roomId: room.id,
-        status: { in: ['CONFIRMED', 'PENDING'] },
+        status: 'CONFIRMED',
         AND: [
           { checkIn: { lt: checkOutDate } },
           { checkOut: { gt: checkInDate } }
@@ -43,15 +43,13 @@ export async function POST(request: Request) {
     const taxAmount = calculateTax(basePrice);
     const totalAmount = basePrice + taxAmount;
 
-    const initialStatus = paymentMethod === 'PAY_AT_PROPERTY' ? 'CONFIRMED' : 'PENDING';
-
     const booking = await db.booking.create({
       data: {
         roomId: room.id,
         guestName,
         guestEmail,
         guestPhone,
-        nationality,
+        nationality: nationality || 'Indian',
         govtIdType,
         govtIdNumber,
         checkIn: checkInDate,
@@ -59,8 +57,8 @@ export async function POST(request: Request) {
         numberOfGuests: parseInt(numberOfGuests, 10) || 1,
         totalAmount,
         taxAmount,
-        status: initialStatus,
-        paymentMethod
+        status: 'CONFIRMED',
+        paymentMethod: paymentMethod || 'ONLINE'
       }
     });
 
