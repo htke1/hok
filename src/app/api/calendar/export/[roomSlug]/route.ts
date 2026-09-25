@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { generateICalFeed } from '@/lib/ical';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ roomSlug: string }> }
@@ -22,7 +25,9 @@ export async function GET(
     const headers = new Headers();
     headers.set('Content-Type', 'text/calendar; charset=utf-8');
     headers.set('Content-Disposition', `attachment; filename="room-${roomSlug}.ics"`);
-    headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    headers.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0, s-maxage=0');
+    headers.set('Pragma', 'no-cache');
+    headers.set('Expires', '0');
 
     return new NextResponse(icalFeed, {
       status: 200,

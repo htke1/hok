@@ -37,19 +37,21 @@ export async function generateICalFeed(roomSlug: string) {
       end: booking.checkOut,
       allDay: true,
       summary: 'Reserved',
-      description: 'Reserved via Direct Booking',
+      description: 'Reserved via House Of Karma Direct Booking',
     });
   }
 
   // Add blocked dates as events
   for (const blocked of room.blockedDates) {
+    // Strip internal tag like [Feed:...] from public export
+    const cleanReason = (blocked.reason || 'Unavailable').replace(/^\[Feed:[^\]]+\]\s*/, '');
     calendar.createEvent({
       id: `blocked-${blocked.id}@houseofkarma.in`,
       start: blocked.startDate,
       end: blocked.endDate,
       allDay: true,
-      summary: blocked.reason || 'Unavailable',
-      description: `Blocked: ${blocked.reason || 'Manual block'}`,
+      summary: cleanReason,
+      description: `Blocked: ${cleanReason}`,
     });
   }
 
@@ -57,15 +59,24 @@ export async function generateICalFeed(roomSlug: string) {
 }
 
 /**
- * Parse an external iCal feed and return blocked date ranges
+ * Parse an external iCal feed with timeout protection
  */
-export async function parseExternalICalFeed(icalUrl: string) {
-  // Dynamic import for node-ical (CommonJS/ESM interop)
-  const nodeIcal = await import('node-ical');
-  const parser = (nodeIcal as any).default?.async || (nodeIcal as any).async || (nodeIcal as any).default || nodeIcal;
-  const events = typeof parser.fromURL === 'function' 
-    ? await parser.fromURL(icalUrl) 
-    : await (nodeIcal as any).fromURL(icalUrl);
+export async function parseExternalICalFeed(icalUrl: string, timeoutMs: number = 5000) {
+  const fetchWithTimeout = async () => {
+    // Dynamic import for node-ical (CommonJS/ESM interop)
+    const nodeIcal = await import('node-ical');
+    const parser = (nodeIcal as any).default?.async || (nodeIcal as any).async || (nodeIcal as any).default || nodeIcal;
+    
+    return typeof parser.fromURL === 'function' 
+      ? await parser.fromURL(icalUrl) 
+      : await (nodeIcal as any).fromURL(icalUrl);
+  };
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(`iCal fetch timed out after ${timeoutMs}ms`)), timeoutMs)
+  );
+
+  const events = (await Promise.race([fetchWithTimeout(), timeoutPromise])) as Record<string, any>;
 
   const blockedRanges: Array<{
     start: Date;
@@ -88,7 +99,7 @@ export async function parseExternalICalFeed(icalUrl: string) {
 }
 
 /**
- * Sync an external iCal feed and update blocked dates in DB
+ * Sync a single external iCal feed and update blocked dates in DB
  */
 export async function syncExternalCalendar(feedId: string) {
   const feed = await db.iCalFeed.findUnique({
@@ -100,17 +111,21 @@ export async function syncExternalCalendar(feedId: string) {
     throw new Error('Feed not found or inactive');
   }
 
-  const blockedRanges = await parseExternalICalFeed(feed.externalUrl);
+  const blockedRanges = await parseExternalICalFeed(feed.externalUrl, 5000);
 
-  // Remove old OTA_SYNC blocked dates for this room
+  // Remove old blocked dates associated with this specific feed
   await db.blockedDate.deleteMany({
     where: {
       roomId: feed.roomId,
       source: 'OTA_SYNC',
+      OR: [
+        { reason: { startsWith: `[Feed:${feed.id}]` } },
+        { reason: { not: { startsWith: '[Feed:' } } }, // Cleans up legacy untagged records
+      ],
     },
   });
 
-  // Insert new blocked dates
+  // Insert new blocked dates tagged with this feed ID
   for (const range of blockedRanges) {
     await db.blockedDate.create({
       data: {
@@ -118,7 +133,7 @@ export async function syncExternalCalendar(feedId: string) {
         startDate: range.start,
         endDate: range.end,
         source: 'OTA_SYNC',
-        reason: range.summary,
+        reason: `[Feed:${feed.id}] ${range.summary}`,
       },
     });
   }
@@ -132,3 +147,68 @@ export async function syncExternalCalendar(feedId: string) {
   return { syncedCount: blockedRanges.length };
 }
 
+/**
+ * Just-In-Time (JIT) sync for a room if its external feeds are stale.
+ * Invoked on availability checks and checkout payments.
+ */
+export async function syncRoomIfStale(roomId: string, maxAgeMinutes: number = 3): Promise<void> {
+  try {
+    const feeds = await db.iCalFeed.findMany({
+      where: { roomId, isActive: true },
+    });
+
+    if (feeds.length === 0) return;
+
+    const thresholdTime = Date.now() - maxAgeMinutes * 60 * 1000;
+
+    const staleFeeds = feeds.filter((feed) => {
+      if (!feed.lastSynced) return true;
+      return new Date(feed.lastSynced).getTime() < thresholdTime;
+    });
+
+    if (staleFeeds.length === 0) return;
+
+    // Sync all stale feeds for this room concurrently
+    await Promise.allSettled(
+      staleFeeds.map((feed) => syncExternalCalendar(feed.id))
+    );
+  } catch (error) {
+    console.warn(`JIT sync warning for room ${roomId}:`, error);
+  }
+}
+
+/**
+ * Background sync for ALL active feeds across all rooms (used by Vercel Cron)
+ */
+export async function syncAllActiveFeeds() {
+  const feeds = await db.iCalFeed.findMany({
+    where: { isActive: true },
+    include: { room: true },
+  });
+
+  const results = await Promise.allSettled(
+    feeds.map(async (feed) => {
+      const res = await syncExternalCalendar(feed.id);
+      return {
+        feedId: feed.id,
+        roomName: feed.room.name,
+        syncedCount: res.syncedCount,
+      };
+    })
+  );
+
+  const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+  const failed = results.filter((r) => r.status === 'rejected').length;
+
+  return {
+    totalFeeds: feeds.length,
+    succeeded,
+    failed,
+    details: results.map((r, i) => ({
+      feedId: feeds[i].id,
+      roomName: feeds[i].room.name,
+      status: r.status,
+      result: r.status === 'fulfilled' ? (r as PromiseFulfilledResult<any>).value : (r as PromiseRejectedResult).reason?.message,
+    })),
+  };
+}

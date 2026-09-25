@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { calculateNights, calculateTax } from '@/lib/utils';
+import { syncRoomIfStale } from '@/lib/ical';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
@@ -31,6 +35,9 @@ export async function GET(request: Request) {
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
+
+    // Just-In-Time (JIT) check: sync external OTA calendars if older than 3 minutes
+    await syncRoomIfStale(room.id, 3);
 
     // Check overlapping bookings
     const overlappingBookings = await db.booking.findFirst({

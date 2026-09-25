@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { razorpay } from '@/lib/razorpay';
 import { calculateNights, calculateTax } from '@/lib/utils';
+import { syncRoomIfStale } from '@/lib/ical';
 
 export async function POST(request: Request) {
   try {
@@ -24,6 +25,13 @@ export async function POST(request: Request) {
 
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    // High-refresh JIT sync: pull latest OTA blocks if stale (> 2 mins)
+    try {
+      await syncRoomIfStale(room.id, 2);
+    } catch (err) {
+      console.warn('JIT sync warning in create-order:', err);
     }
 
     // Availability check against confirmed bookings only

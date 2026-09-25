@@ -265,6 +265,11 @@ export default function CalendarPage() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const monthName = currentMonthDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
+  const cleanReason = (reason: string | null, fallback: string) => {
+    if (!reason) return fallback;
+    return reason.replace(/^\[Feed:[^\]]+\]\s*/i, '').trim() || fallback;
+  };
+
   // Helper to determine day status
   const getDayStatus = (day: number) => {
     const dateObj = new Date(year, month, day, 12, 0, 0); // Noon to avoid timezone boundary issues
@@ -285,9 +290,9 @@ export default function CalendarPage() {
       const end = new Date(blk.endDate).getTime();
       if (time >= start && time < end) {
         if (blk.source === 'OTA_SYNC') {
-          return { type: 'OTA', label: blk.reason || 'Booking.com', item: blk };
+          return { type: 'OTA', label: cleanReason(blk.reason, 'Booking.com / OTA'), item: blk };
         }
-        return { type: 'MANUAL', label: blk.reason || 'Blocked', item: blk };
+        return { type: 'MANUAL', label: cleanReason(blk.reason, 'Blocked'), item: blk };
       }
     }
 
@@ -525,7 +530,7 @@ export default function CalendarPage() {
                         <span className="font-bold text-[#2D3748]">
                           {formatDate(b.startDate)} — {formatDate(b.endDate)}
                         </span>
-                        <span className="text-[#9B8B7E] ml-2 italic">({b.reason || 'Blocked'})</span>
+                        <span className="text-[#9B8B7E] ml-2 italic">({cleanReason(b.reason, 'Blocked')})</span>
                       </div>
                       <button
                         onClick={() => deleteBlock(b.id)}
